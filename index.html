@@ -25,7 +25,7 @@
             max-width: 300px;
             margin-right: 10px;
             font-size: 14px;
-            box-sizing: border-box; /* Asegura que el padding no afecte el tamaño */
+            box-sizing: border-box;
         }
         button {
             padding: 10px 20px;
@@ -150,6 +150,11 @@
     <ul class="address-list" id="addressList">
         <!-- Las direcciones agregadas aparecerán aquí -->
     </ul>
+
+    <!-- Botón para exportar a PDF -->
+    <button onclick="exportToPDF()">Exportar a PDF</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         // Cargar las direcciones almacenadas al cargar la página
@@ -328,6 +333,35 @@
             const savedAddresses = JSON.parse(localStorage.getItem('addresses'));
             savedAddresses[index].comment = comment;  // Actualizar el comentario
             localStorage.setItem('addresses', JSON.stringify(savedAddresses));  // Guardar en localStorage
+        }
+
+        // Función para exportar las direcciones a PDF
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.text("Listado de Direcciones Revisitas", 10, 10);
+
+            const savedAddresses = JSON.parse(localStorage.getItem('addresses')) || [];
+            let yPosition = 20;
+
+            savedAddresses.forEach((address, index) => {
+                doc.setFontSize(12);
+                doc.text(`Etiqueta: ${address.label}`, 10, yPosition);
+                doc.text(`Dirección: ${address.address}`, 10, yPosition + 5);
+                doc.text(`Teléfono: ${address.phone || 'No disponible'}`, 10, yPosition + 10);
+                doc.text(`Comentario: ${address.comment || 'Sin comentario'}`, 10, yPosition + 15);
+                yPosition += 25;
+
+                if (yPosition > 270) {
+                    doc.addPage();
+                    yPosition = 10;
+                }
+            });
+
+            // Guardar el archivo PDF
+            doc.save("direcciones_revisitas.pdf");
         }
     </script>
 
