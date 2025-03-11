@@ -286,18 +286,21 @@
             }
         }
 
-        // Función para eliminar una dirección
+        // Función para eliminar una dirección con confirmación
         function deleteAddress(index) {
-            const savedAddresses = JSON.parse(localStorage.getItem('addresses'));
+            const confirmed = confirm("¿Estás seguro de que deseas eliminar esta dirección?");
+            if (confirmed) {
+                const savedAddresses = JSON.parse(localStorage.getItem('addresses'));
 
-            // Eliminar la dirección
-            savedAddresses.splice(index, 1);
+                // Eliminar la dirección
+                savedAddresses.splice(index, 1);
 
-            // Guardar el nuevo arreglo de direcciones
-            localStorage.setItem('addresses', JSON.stringify(savedAddresses));
+                // Guardar el nuevo arreglo de direcciones
+                localStorage.setItem('addresses', JSON.stringify(savedAddresses));
 
-            // Actualizar la lista de direcciones
-            loadAddresses();
+                // Actualizar la lista de direcciones
+                loadAddresses();
+            }
         }
 
         // Función para filtrar direcciones por etiqueta, dirección o teléfono
