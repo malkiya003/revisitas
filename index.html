@@ -208,6 +208,11 @@
             phoneLink.classList.add('phone-link');
             phoneLink.textContent = address.phone ? `Llamar: ${address.phone}` : '';
 
+            // Mostrar la fecha de creación o modificación
+            const dateSpan = document.createElement('span');
+            dateSpan.classList.add('date');
+            dateSpan.textContent = `Última modificación: ${address.date}`;
+
             // Crear botones de editar y eliminar
             const buttons = document.createElement('div');
             buttons.classList.add('buttons');
@@ -237,6 +242,7 @@
             listItem.appendChild(link);
             listItem.appendChild(commentBox); // Añadir la caja de comentario
             listItem.appendChild(phoneLink); // Añadir el enlace de teléfono
+            listItem.appendChild(dateSpan); // Añadir la fecha
             listItem.appendChild(buttons);
 
             // Agregar el nuevo elemento a la lista de direcciones
@@ -259,7 +265,8 @@
             }
 
             const savedAddresses = JSON.parse(localStorage.getItem('addresses')) || [];
-            savedAddresses.push({ label: label, address: address, phone: phone, comment: '' });
+            const date = new Date().toLocaleString();  // Fecha actual
+            savedAddresses.push({ label: label, address: address, phone: phone, comment: '', date: date });
             localStorage.setItem('addresses', JSON.stringify(savedAddresses));
 
             // Actualizar la lista de direcciones
@@ -282,8 +289,9 @@
             const newPhone = prompt("Edita el teléfono", address.phone);
 
             if (newLabel !== null && newLabel.trim() !== '' && newAddress !== null && newAddress.trim() !== '') {
+                const date = new Date().toLocaleString();  // Fecha de modificación
                 // Actualizamos el objeto con la nueva etiqueta, dirección y teléfono
-                savedAddresses[index] = { label: newLabel.trim(), address: newAddress.trim(), phone: newPhone.trim(), comment: address.comment };
+                savedAddresses[index] = { label: newLabel.trim(), address: newAddress.trim(), phone: newPhone.trim(), comment: address.comment, date: date };
                 localStorage.setItem('addresses', JSON.stringify(savedAddresses));
 
                 // Actualizar la lista de direcciones
@@ -352,7 +360,8 @@
                 doc.text(`Dirección: ${address.address}`, 10, yPosition + 5);
                 doc.text(`Teléfono: ${address.phone || 'No disponible'}`, 10, yPosition + 10);
                 doc.text(`Comentario: ${address.comment || 'Sin comentario'}`, 10, yPosition + 15);
-                yPosition += 25;
+                doc.text(`Fecha: ${address.date}`, 10, yPosition + 20);
+                yPosition += 30;
 
                 if (yPosition > 270) {
                     doc.addPage();
