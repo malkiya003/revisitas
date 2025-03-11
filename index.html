@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Direcciones Revisitas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input[type="text"], input[type="tel"] {
+            padding: 10px;
+            width: 250px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .search-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .address-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .address-item {
+            background-color: #fff;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .address-link {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        .address-link:hover {
+            text-decoration: underline;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .edit-btn, .delete-btn {
+            padding: 5px 10px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .edit-btn:hover {
+            background-color: #e68900;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .comment-box {
+            width: 200px;
+            padding: 5px;
+            font-size: 14px;
+            margin-left: 10px;
+            resize: vertical;
+            min-height: 50px;
+        }
+        .phone-link {
+            color: #00bcd4;
+            text-decoration: none;
+        }
+        .phone-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Listado de Direcciones</h1>
+
+    <!-- Campo de búsqueda -->
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Buscar por etiqueta, dirección o teléfono" onkeyup="searchAddress()">
+    </div>
+
+    <div class="form-container">
+        <input type="text" id="addressLabel" placeholder="Etiqueta (nombre)" />
+        <input type="text" id="addressInput" placeholder="Introduce una dirección" />
+        <input type="tel" id="phoneInput" placeholder="Número de teléfono" />
+        <button onclick="addAddress()">Agregar Dirección</button>
+    </div>
+
+    <ul class="address-list" id="addressList">
+        <!-- Las direcciones agregadas aparecerán aquí -->
+    </ul>
+
+    <script>
+        // Cargar las direcciones almacenadas al cargar la página
+        window.onload = function() {
+            loadAddresses();
+        };
+
+        // Función para cargar las direcciones guardadas en localStorage
+        function loadAddresses() {
+            const savedAddresses = JSON.parse(localStorage.getItem('addresses')) || [];
+            const addressList = document.getElementById('addressList');
+            addressList.innerHTML = '';  // Limpiar la lista antes de cargar las direcciones
+
+            savedAddresses.forEach((address, index) => {
+                addAddressToList(address, index);
+            });
+        }
+
+        // Función para agregar una dirección al HTML
+        function addAddressToList(address, index) {
+            const googleMapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(address.address)}`;
+
+            // Crear un nuevo elemento de lista para la dirección
+            const listItem = document.createElement('li');
+            listItem.classList.add('address-item');
+
+            // Crear un enlace con la dirección que redirige a Google Maps
+            const link = document.createElement('a');
+            link.href = googleMapsUrl;
+            link.classList.add('address-link');
+            link.target = "_blank";  // Abrir en una nueva pestaña
+            link.textContent = address.address;
+
+            // Crear un contenedor para la etiqueta (nombre) y la dirección
+            const label = document.createElement('span');
+            label.classList.add('address-label');
+            label.textContent = `${address.label}: `;
+
+            // Caja de comentarios con un textarea (multilínea)
+            const commentBox = document.createElement('textarea');
+            commentBox.classList.add('comment-box');
+            commentBox.value = address.comment || '';  // Mostrar el comentario si existe
+            commentBox.placeholder = 'Comentario...';
+            commentBox.oninput = function() {
+                saveComment(index, commentBox.value);
+            };
+
+            // Enlace de teléfono
+            const phoneLink = document.createElement('a');
+            phoneLink.href = `tel:${address.phone}`; // Hacer clic en el número llama al teléfono
+            phoneLink.classList.add('phone-link');
+            phoneLink.textContent = address.phone ? `Llamar: ${address.phone}` : '';
+
+            // Crear botones de editar y eliminar
+            const buttons = document.createElement('div');
+            buttons.classList.add('buttons');
+
+            // Botón Editar
+            const editButton = document.createElement('button');
+            editButton.classList.add('edit-btn');
+            editButton.textContent = 'Editar';
+            editButton.onclick = function() {
+                editAddress(index);
+            };
+
+            // Botón Eliminar
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-btn');
+            deleteButton.textContent = 'Eliminar';
+            deleteButton.onclick = function() {
+                deleteAddress(index);
+            };
+
+            // Añadir los botones al contenedor
+            buttons.appendChild(editButton);
+            buttons.appendChild(deleteButton);
+
+            // Añadir todo al item de la lista
+            listItem.appendChild(label);
+            listItem.appendChild(link);
+            listItem.appendChild(commentBox); // Añadir la caja de comentario
+            listItem.appendChild(phoneLink); // Añadir el enlace de teléfono
+            listItem.appendChild(buttons);
+
+            // Agregar el nuevo elemento a la lista de direcciones
+            const addressList = document.getElementById('addressList');
+            addressList.appendChild(listItem);
+        }
+
+        // Función para agregar una nueva dirección a la lista y al localStorage
+        function addAddress() {
+            const labelInput = document.getElementById('addressLabel');
+            const addressInput = document.getElementById('addressInput');
+            const phoneInput = document.getElementById('phoneInput');
+            const label = labelInput.value.trim();
+            const address = addressInput.value.trim();
+            const phone = phoneInput.value.trim();
+
+            if (label === '' || address === '') {
+                alert('Por favor, ingrese tanto una etiqueta como una dirección.');
+                return;
+            }
+
+            const savedAddresses = JSON.parse(localStorage.getItem('addresses')) || [];
+            savedAddresses.push({ label: label, address: address, phone: phone, comment: '' });
+            localStorage.setItem('addresses', JSON.stringify(savedAddresses));
+
+            // Actualizar la lista de direcciones
+            loadAddresses();
+
+            // Limpiar los campos de entrada
+            labelInput.value = '';
+            addressInput.value = '';
+            phoneInput.value = '';
+        }
+
+        // Función para editar una dirección
+        function editAddress(index) {
+            const savedAddresses = JSON.parse(localStorage.getItem('addresses'));
+            const address = savedAddresses[index];
+            
+            // Editar la dirección, etiqueta y teléfono
+            const newLabel = prompt("Edita la etiqueta (nombre)", address.label);
+            const newAddress = prompt("Edita la dirección", address.address);
+            const newPhone = prompt("Edita el teléfono", address.phone);
+
+            if (newLabel !== null && newLabel.trim() !== '' && newAddress !== null && newAddress.trim() !== '') {
+                // Actualizamos el objeto con la nueva etiqueta, dirección y teléfono
+                savedAddresses[index] = { label: newLabel.trim(), address: newAddress.trim(), phone: newPhone.trim(), comment: address.comment };
+                localStorage.setItem('addresses', JSON.stringify(savedAddresses));
+
+                // Actualizar la lista de direcciones
+                loadAddresses();
+            }
+        }
+
+        // Función para eliminar una dirección
+        function deleteAddress(index) {
+            const savedAddresses = JSON.parse(localStorage.getItem('addresses'));
+
+            // Eliminar la dirección
+            savedAddresses.splice(index, 1);
+
+            // Guardar el nuevo arreglo de direcciones
+            localStorage.setItem('addresses', JSON.stringify(savedAddresses));
+
+            // Actualizar la lista de direcciones
+            loadAddresses();
+        }
+
+        // Función para filtrar direcciones por etiqueta, dirección o teléfono
+        function searchAddress() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const savedAddresses = JSON.parse(localStorage.getItem('addresses')) || [];
+            const addressList = document.getElementById('addressList');
+            addressList.innerHTML = ''; // Limpiar la lista antes de aplicar el filtro
+
+            // Filtrar las direcciones que coinciden con la búsqueda en etiqueta, dirección o teléfono
+            const filteredAddresses = savedAddresses.filter(address => 
+                address.label.toLowerCase().includes(searchTerm) ||
+                address.address.toLowerCase().includes(searchTerm) ||
+                (address.phone && address.phone.includes(searchTerm))
+            );
+
+            // Mostrar las direcciones filtradas
+            filteredAddresses.forEach((address, index) => {
+                addAddressToList(address, index);
+            });
+        }
+
+        // Función para guardar el comentario de una dirección en localStorage
+        function saveComment(index, comment) {
+            const savedAddresses = JSON.parse(localStorage.getItem('addresses'));
+            savedAddresses[index].comment = comment;  // Actualizar el comentario
+            localStorage.setItem('addresses', JSON.stringify(savedAddresses));  // Guardar en localStorage
+        }
+    </script>
+
+</body>
+</html>
